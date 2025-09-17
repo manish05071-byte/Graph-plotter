@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultimate Graph Plotter</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    #graph {
+      width: 95%;
+      height: 70vh;
+      margin: 20px auto;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 1rem;
+      margin: 5px;
+    }
+    label {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Ultimate Graph Plotter</h2>
+  <p>Type any function of x (e.g. sin(x), cos(x), tan(x), x^2, exp(x), log(x))</p>
+  
+  <input id="fnInput" type="text" placeholder="Enter function of x (e.g. sin(x))">
+  <label>From: <input id="xMin" type="number" value="-10" style="width:70px;"></label>
+  <label>To: <input id="xMax" type="number" value="10" style="width:70px;"></label>
+  <button onclick="plotGraph()">Plot</button>
+  
+  <div id="graph"></div>
+
+  <script>
+    // Convert input to valid JavaScript
+    function parseExpression(expr) {
+      return expr
+        .replace(/sin/gi, 'Math.sin')
+        .replace(/cos/gi, 'Math.cos')
+        .replace(/tan/gi, 'Math.tan')
+        .replace(/sqrt/gi, 'Math.sqrt')
+        .replace(/log/gi, 'Math.log')    // natural log
+        .replace(/exp/gi, 'Math.exp')
+        .replace(/pi/gi, 'Math.PI')
+        .replace(/\^/g, '**'); // allow x^2 syntax
+    }
+
+    function generateX(start, end, step) {
+      const arr = [];
+      for (let x = start; x <= end; x += step) arr.push(x);
+      return arr;
+    }
+
+    function computeY(expr, xArr) {
+      const yArr = [];
+      for (let x of xArr) {
+        try { 
+          let y = eval(expr);
+          if (isFinite(y)) yArr.push(y); else yArr.push(NaN);
+        } catch { 
+          yArr.push(NaN);
+        }
+      }
+      return yArr;
+    }
+
+    function plotGraph() {
+      let input = document.getElementById('fnInput').value.trim() || 'sin(x)';
+      let expr = parseExpression(input);
+      let xMin = parseFloat(document.getElementById('xMin').value);
+      let xMax = parseFloat(document.getElementById('xMax').value);
+      if (xMax <= xMin) xMax = xMin + 1;
+
+      const x = generateX(xMin,xMax,(xMax-xMin)/500); // 500 points for smooth graph
+      const y = computeY(expr,x);
+
+      Plotly.newPlot('graph', [{
+        x: x,
+        y: y,
+        mode: 'lines',
+        line: { color: 'blue', width: 2 },
+        name: input
+      }], {
+        margin: { t: 30, r: 20, l: 40, b: 40 },
+        xaxis: { title: 'x', zeroline: true },
+        yaxis: { title: 'y', zeroline: true },
+      });
+    }
+
+    // Plot default on load
+    plotGraph();
+  </script>
+</body>
+</html>
